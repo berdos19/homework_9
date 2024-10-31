@@ -1,15 +1,34 @@
-﻿using StudentTeacherManagement.Core.Interfaces;
+﻿using Microsoft.EntityFrameworkCore;
+using StudentTeacherManagement.Core.Interfaces;
 using StudentTeacherManagement.Core.Models;
+using StudentTeaherManagement.Storage;
 
 namespace StudentTeacherManagement.Services;
 
 public class GroupService : IGroupService
 {
+    private readonly DataContext _context;
+
+    public GroupService(DataContext context)
+    {
+        _context = context;
+    }
+
     #region DQL
 
-    public Task<IEnumerable<Group>> GetGroups(string? name, int skip, int take, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<Group>> GetGroups(string? name, int skip, int take, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var groups = _context.Groups.AsQueryable();
+
+        if (!string.IsNullOrEmpty(name))
+        {
+            groups = groups.Where(g => g.Name.Contains(name));
+        }
+
+        return await groups.OrderBy(g => g.Name)
+            .Skip(skip)
+            .Take(take)
+            .ToArrayAsync(cancellationToken);
     }
 
     public Task<Group?> GetGroupById(Guid id, CancellationToken cancellationToken = default)
