@@ -27,20 +27,20 @@ public class AuthController : ControllerBase
    }
 
    [HttpPost("verifyUser")]
-   public async Task<ActionResult<User>> VerifyUser([FromBody] VerificationData verificationData)
+   public async Task<ActionResult<AuthResponse>> VerifyUser([FromBody] VerificationData verificationData)
    {
-      var user = await _authService.ValidateAccount(verificationData.Email, verificationData.Code);
-      return Ok(user);
+      var (user, token) = await _authService.ValidateAccount(verificationData.Email, verificationData.Code);
+      return Ok(new AuthResponse(){ User = user, Token = token });
    }
 
    [HttpPost("login")]
-   public async Task<ActionResult<User>> Login([FromBody] LoginDTO user)
+   public async Task<ActionResult<AuthResponse>> Login([FromBody] LoginDTO user)
    {
-      var loggedUser = await _authService.Login(user.Email, user.Password);
+      var (loggedUser, token) = await _authService.Login(user.Email, user.Password);
 
       if (loggedUser == null)
          return NotFound();
       
-      return Ok(loggedUser);
+      return Ok(new AuthResponse(){ User = loggedUser, Token = token });
    }
 }

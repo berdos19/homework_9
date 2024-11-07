@@ -5,7 +5,7 @@ namespace StudentTeacherManagement.Core.Interfaces;
 public interface IAuthService
 {
     Task Register(User user);
-    Task<User?> Login(string email, string password);
+    Task<(User?, string)> Login(string email, string password);
 
-    Task<User> ValidateAccount(string email, int code);
+    Task<(User, string)> ValidateAccount(string email, int code);
 }

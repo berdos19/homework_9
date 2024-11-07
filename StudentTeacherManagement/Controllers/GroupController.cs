@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using StudentTeacherManagement.Core.Interfaces;
 using StudentTeacherManagement.DTOs;
@@ -19,7 +20,7 @@ public class GroupController : ControllerBase
     }
 
     [HttpGet]
-    [LogFilter]
+    [Authorize]
     public async Task<ActionResult<IEnumerable<GroupDTO>>> GetGroups([FromQuery] string? name = null,
                                                                   [FromQuery] int skip = 0,
                                                                   [FromQuery] int take = 10)

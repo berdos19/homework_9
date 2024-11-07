@@ -1,5 +1,7 @@
+using System.Text;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using StudentTeacherManagement;
+using Microsoft.IdentityModel.Tokens;
 using StudentTeacherManagement.Core.Interfaces;
 using StudentTeacherManagement.Fakes;
 using StudentTeacherManagement.Services;
@@ -15,8 +17,18 @@ builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAutoMapper(typeof(Program));
 
-
-builder.Services.AddControllers();
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters()
+        {
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+                builder.Configuration.GetSection("AppSettings:Token").Value ?? string.Empty)),
+            ValidateIssuer = false,
+            ValidateAudience = false,
+        };
+    });
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();

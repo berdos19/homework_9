@@ -1,5 +1,9 @@
-﻿using System.Text.RegularExpressions;
+﻿using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Text;
+using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using StudentTeacherManagement.Core.Interfaces;
 using StudentTeacherManagement.Core.Models;
 using StudentTeaherManagement.Storage;
@@ -12,16 +16,19 @@ public class AuthService : IAuthService
     private const string EmailPattern = @"^[\w\.-]+@[a-zA-Z\d\.-]+\.[a-zA-Z]{2,6}$";
     private const int MinCodeValue = 100_000;
     private const int MaxCodeValue = 1_000_000;
+    private static TimeSpan MaxVerificationTime => TimeSpan.FromMinutes(10);
     
     private readonly DataContext _context;
     private readonly IEmailSender _emailSender;
+    private IConfiguration _configuration;
 
     private static IDictionary<int, User> _unverifiedUsers = new Dictionary<int, User>();
 
-    public AuthService(DataContext context, IEmailSender emailSender)
+    public AuthService(DataContext context, IEmailSender emailSender, IConfiguration configuration)
     {
         _context = context;
         _emailSender = emailSender;
+        _configuration = configuration;
     }
 
     public Task Register(User user)
@@ -62,18 +69,18 @@ public class AuthService : IAuthService
         }   
     }
 
-    public async Task<User?> Login(string email, string password)
+    public async Task<(User?, string)> Login(string email, string password)
     {
         // check email and password
         var user = await _context.Students.SingleOrDefaultAsync(s => s.Email.Equals(email) && s.Password.Equals(password));
-        return user;
+        return (user, GenerateToken(user));
         // [5, 4, 1, 43, 1, 2, 1]
         // First(1) => 1
         // Single(1) => exception
         // Single(4) => 4
     }
 
-    public async Task<User> ValidateAccount(string email, int code)
+    public async Task<(User, string)> ValidateAccount(string email, int code)
     {
         // check code with email
         if (_unverifiedUsers.TryGetValue(code, out var unverifiedUser))
@@ -91,12 +98,33 @@ public class AuthService : IAuthService
                 };
                 _context.Students.Add(student);
                 await _context.SaveChangesAsync();
-                return student;
+                return (student, GenerateToken(student));
             }
         }
 
         throw new ArgumentException("Code or email is incorrect");
     }
 
-    private static TimeSpan MaxVerificationTime => TimeSpan.FromMinutes(10);
+    private string GenerateToken(User user)
+    {
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.Role, nameof(Student)),
+        };
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(
+            _configuration.GetSection("AppSettings:Token").Value!));
+
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256Signature);
+
+        var token = new JwtSecurityToken(
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(
+                int.Parse(_configuration.GetSection("AppSettings:ExpireTime").Value!)),
+            signingCredentials: creds);
+
+        var jwt = new JwtSecurityTokenHandler().WriteToken(token);
+
+        return jwt;
+    }
 }
