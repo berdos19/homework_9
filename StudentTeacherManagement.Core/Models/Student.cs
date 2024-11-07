@@ -1,4 +1,6 @@
-﻿namespace StudentTeacherManagement.Core.Models;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace StudentTeacherManagement.Core.Models;
 
 public class Student : User
 {
@@ -7,6 +9,8 @@ public class Student : User
     /// </summary>
     public DateTime EnrolledAt { get; set; }
 
-    public virtual Group Group { get; set; }
-    
+    [ForeignKey(nameof(Group))]
+    public Guid? GroupId { get; set; }
+
+    public virtual Group? Group { get; set; }
 }

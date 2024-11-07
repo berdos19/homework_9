@@ -19,11 +19,13 @@ public class GroupController : ControllerBase
     }
 
     [HttpGet]
+    [LogFilter]
     public async Task<ActionResult<IEnumerable<GroupDTO>>> GetGroups([FromQuery] string? name = null,
                                                                   [FromQuery] int skip = 0,
                                                                   [FromQuery] int take = 10)
     {
         var groups = await _groupService.GetGroups(name, skip, take);
+        Console.WriteLine("endpoint");
         return Ok(_mapper.Map<IEnumerable<GroupDTO>>(groups));
     }
 }

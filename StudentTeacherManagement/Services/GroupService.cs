@@ -50,9 +50,11 @@ public class GroupService : IGroupService
         throw new NotImplementedException();
     }
 
-    public Task AddStudentToGroup(Guid groupId, Guid studentId, CancellationToken cancellationToken = default)
+    public async Task AddStudentToGroup(Guid groupId, Guid studentId, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var student = await _context.Students.FindAsync([studentId], cancellationToken: cancellationToken);
+        student.GroupId = groupId;
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     #endregion
