@@ -2,12 +2,15 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using StudentTeacherManagement;
 using StudentTeacherManagement.Core.Interfaces;
 using StudentTeacherManagement.Fakes;
 using StudentTeacherManagement.Services;
 using StudentTeaherManagement.Storage;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddScoped<RequestLoggingFilter>();
 
 builder.Services.AddDbContext<DataContext>(opt =>
     opt.UseSqlServer(builder.Configuration.GetConnectionString("Local")));

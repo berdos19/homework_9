@@ -7,6 +7,7 @@ using StudentTeacherManagement.DTOs;
 namespace StudentTeacherManagement.Controllers;
 
 [ApiController]
+[ServiceFilter(typeof(RequestLoggingFilter))]
 [Route("students")]
 public class StudentController : ControllerBase
 {
